@@ -26,6 +26,13 @@
 
 <div class="container mx-auto">
     <h1>League Standings</h1>
+
+    <!-- New buttons added here -->
+    <div>
+
+        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" id="reset-matches">Reset or Generate Matches for League</button>
+    </div>
+
     <table class="border-separate border-spacing-2 border border-slate-500 ..." id="standings-table">
         <!-- League standings table -->
     </table>
@@ -47,9 +54,21 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+
+
     $(document).ready(function () {
         // Initial load for the first week
         loadWeek(1);
+
+        // Event handler for "Generate League Matches" button
+        $('#generate-matches').click(function () {
+            generateLeagueMatches();
+        });
+
+        // Event handler for "Reset Matches" button
+        $('#reset-matches').click(function () {
+            resetMatches();
+        });
 
         // Event handlers for previous and next week buttons
         $('#prev-week').click(function () {
@@ -73,7 +92,34 @@
         $('#play-all').click(function () {
             playAllMatches();
         });
+
+
     });
+
+    function generateLeagueMatches() {
+
+    }
+
+    function resetMatches() {
+        // Send AJAX request to resetLeague method
+        $.ajax({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            url: '/reset-league', // Replace with the appropriate route for resetLeague method
+            type: 'POST',
+            dataType: 'json',
+            success: function (response) {
+                // Handle success response
+                alert(response.message); // Show success message or handle as needed
+                // You may also need to refresh the standings table or other content after the reset
+            },
+            error: function (xhr, status, error) {
+                // Handle error response
+                console.log(error);
+            }
+        });
+    }
 
     function loadWeek(week) {
         $.ajax({
@@ -113,7 +159,7 @@
                 // Update week predictions table
                 var weekPredictionsTable = '<table class="border-separate border-spacing-2 border border-slate-500 ..."><tr><th>Team</th><th>Prediction</th></tr>';
 
-// Dynamically get the week number
+                // Dynamically get the week number
                 var weekNumber =  response.matches[0].week;
                 console.log(weekNumber);
 
@@ -126,7 +172,7 @@
                 weekPredictionsTable += '</table>';
                 $('#week-predictions').html(weekPredictionsTable);
 
-// Update the current week attribute for the buttons
+                // Update the current week attribute for the buttons
                 $('#week-results').data('week', weekNumber);
             },
             error: function (xhr, status, error) {
