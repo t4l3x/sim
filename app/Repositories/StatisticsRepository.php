@@ -36,11 +36,11 @@ class StatisticsRepository implements IStatisticsRepository
         return $statistic ? $statistic->delete() : false;
     }
 
-    public function updateStatistics(int $teamId, array $stats): void
+    public function updateStatistics(int $leagueTeamsId, array $stats): void
     {
         foreach ($stats as $name => $value) {
             // Attempt to find existing statistic record
-            $statistic = $this->model->firstOrNew(['league_teams_id' => $teamId, 'statistic_name' => $name]);
+            $statistic = $this->model->firstOrNew(['league_teams_id' => $leagueTeamsId, 'statistic_name' => $name]);
             $statistic->statistic_value = $statistic->statistic_value ? $statistic->statistic_value + $value : $value;
 
             // Save the statistic record
@@ -48,7 +48,12 @@ class StatisticsRepository implements IStatisticsRepository
         }
     }
 
-    public function findByLeagueTeamsId($id)
+    public function removeByLeagueTeamsId(int $leagueTeamsId): void
+    {
+        $this->model->where('league_teams_id', $leagueTeamsId)->delete();
+    }
+
+    public function findByLeagueTeamsId(int $id)
     {
         return $this->model->where('league_teams_id', $id)
             ->pluck('statistic_value', 'statistic_name')
