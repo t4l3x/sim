@@ -4,16 +4,18 @@ declare(strict_types=1);
 namespace App\Domain\Services;
 
 use App\Domain\Helpers\GoalSimulator;
+use App\Domain\Repositories\ILeagueTeamsRepository;
 use App\Domain\Repositories\IMatchRepository;
 use App\Domain\Repositories\IUnitOfWork;
 
 class MatchService
 {
     public function __construct(
-        protected IUnitOfWork $unitOfWork,
+        protected IUnitOfWork            $unitOfWork,
         protected IMatchRepository       $matchRepository,
+        protected ILeagueTeamsRepository $leagueTeamsRepository,
         protected GoalSimulator          $goalSimulator,
-        protected TeamsService $teamsService,
+        protected TeamsService           $teamsService,
         protected StatisticsUpdater      $statisticsUpdater
     )
     {
@@ -22,6 +24,7 @@ class MatchService
     /**
      * @throws \Exception
      */
+
     public function playMatch(int $matchId): void
     {
         // Start a transaction
@@ -30,41 +33,11 @@ class MatchService
         try {
             $match = $this->matchRepository->findById($matchId);
 
-            // Check if match has been played before
             if ($match['played']) {
-
-                $oldHomeGoals = $match['home_team_goals'];
-                $oldAwayGoals = $match['away_team_goals'];
-
-                // Remove old statistics for home and away team
-                $this->statisticsUpdater->update($match['home_team_id'], $oldHomeGoals, $oldAwayGoals, false);
-                $this->statisticsUpdater->update($match['away_team_id'], $oldAwayGoals, $oldHomeGoals, false);
+                $this->resetMatchStatistics($match);
             }
 
-            $homeTeamStrength = $this->teamsService->teamStrengthCalculator($match['home_team_id']);
-            $awayTeamStrength = $this->teamsService->teamStrengthCalculator($match['away_team_id']);
-
-            // Generate a match result based on team strengths
-            $averageStrength = ($homeTeamStrength + $awayTeamStrength) / 2;
-            $homeGoalProb = $averageStrength * 0.8;
-            $awayGoalProb = $averageStrength * 0.6;
-            $homeGoals = $this->goalSimulator->simulate($homeGoalProb);
-            $awayGoals = $this->goalSimulator->simulate($awayGoalProb);
-
-            $this->matchRepository->updateMatchResult($matchId, [
-                'homeGoals' => $homeGoals,
-                'awayGoals' => $awayGoals,
-                'played' => 1,
-            ]);
-
-            // Fetch the updated match data
-            $match = $this->matchRepository->findById($matchId);
-
-            // Update or create statistics for home team
-            $this->statisticsUpdater->update($match['home_team_id'], $match['home_team_goals'], $match['away_team_goals']);
-
-            // Update or create statistics for away team
-            $this->statisticsUpdater->update($match['away_team_id'], $match['away_team_goals'], $match['home_team_goals']);
+            $this->simulateMatchResult($match);
 
             // If everything is okay, commit the changes.
             $this->unitOfWork->commit();
@@ -76,7 +49,6 @@ class MatchService
             throw $e;
         }
     }
-
 
     /**
      * @throws \Exception
@@ -105,6 +77,52 @@ class MatchService
     public function getMatchesForWeek(int $week): array
     {
         return $this->matchRepository->getMatchesForWeek($week);
+    }
+
+
+    private function resetMatchStatistics(array $match): void
+    {
+
+        $homeTeamLeagueTeamsId = $this->findLeagueTeamsId($match['home_team_id'], $match['leagues_id']);
+        $awayTeamLeagueTeamsId = $this->findLeagueTeamsId($match['away_team_id'], $match['leagues_id']);
+
+        $this->statisticsUpdater->update($homeTeamLeagueTeamsId, $match['home_team_goals'], $match['away_team_goals'], false);
+        $this->statisticsUpdater->update($awayTeamLeagueTeamsId, $match['away_team_goals'], $match['home_team_goals'], false);
+    }
+
+    private function findLeagueTeamsId(int $teamId, int $leagueId): ?int
+    {
+        $leagueTeam = $this->leagueTeamsRepository->findLeagueTeamsId($teamId, $leagueId);
+
+        return $leagueTeam ? $leagueTeam->id : null;
+    }
+
+    private function simulateMatchResult(array $match): void
+    {
+        $homeTeamStrength = $this->teamsService->teamStrengthCalculator($match['home_team_id']);
+        $awayTeamStrength = $this->teamsService->teamStrengthCalculator($match['away_team_id']);
+
+        // Generate a match result based on team strengths
+        $averageStrength = ($homeTeamStrength + $awayTeamStrength) / 2;
+        $homeGoalProb = $averageStrength * 0.8;
+        $awayGoalProb = $averageStrength * 0.6;
+        $homeGoals = $this->goalSimulator->simulate($homeGoalProb);
+        $awayGoals = $this->goalSimulator->simulate($awayGoalProb);
+
+        $this->matchRepository->updateMatchResult($match['id'], [
+            'homeGoals' => $homeGoals,
+            'awayGoals' => $awayGoals,
+            'played' => 1,
+        ]);
+
+        // Fetch the updated match data
+        $updatedMatch = $this->matchRepository->findById($match['id']);
+
+        // Update or create statistics for home team
+        $this->statisticsUpdater->update($updatedMatch['home_team_id'], $updatedMatch['home_team_goals'], $updatedMatch['away_team_goals']);
+
+        // Update or create statistics for away team
+        $this->statisticsUpdater->update($updatedMatch['away_team_id'], $updatedMatch['away_team_goals'], $updatedMatch['home_team_goals']);
     }
 
 }

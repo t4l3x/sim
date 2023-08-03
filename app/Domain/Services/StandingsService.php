@@ -10,7 +10,7 @@ use App\Domain\Repositories\IStatisticsRepository;
 class StandingsService
 {
 
-
+    private array $teams;
     public function __construct(
         private readonly ILeagueTeamsRepository $leagueTeamsRepository,
         private readonly IStatisticsRepository  $statisticsRepository,
@@ -20,14 +20,20 @@ class StandingsService
 
     }
 
+    private function loadTeams($leagueId): void
+    {
+        if (empty($this->teams)) {
+            $this->teams = $this->leagueTeamsRepository->getTeamsByLeagueId($leagueId);
+        }
+    }
 
     public function calculateLeagueStandings($leagueId): array
     {
-        $teams = $this->leagueTeamsRepository->getTeamsByLeagueId($leagueId);
+        $this->loadTeams($leagueId);
 
         $standings = [];
 
-        foreach ($teams as $team) {
+        foreach ($this->teams as $team) {
             $statistics = $this->statisticsRepository->findByLeagueTeamsId($team['id']);
 
             if (!empty($statistics)) {
@@ -64,12 +70,12 @@ class StandingsService
         return $standings;
     }
 
-    public function getStandingsWithPointsAndAttributes(): array
+    public function getStandingsWithPointsAndAttributes($leagueId): array
     {
-        $teams = $this->leagueTeamsRepository->getTeamsByLeagueId(1); // Replace 1 with your league_id
+        $this->loadTeams($leagueId); // Replace 1 with your league_id
         $standings = [];
 
-        foreach ($teams as $team) {
+        foreach ($this->teams as $team) {
             $statistics = $this->statisticsRepository->findByLeagueTeamsId($team['id']);
 
             if (!empty($statistics)) {

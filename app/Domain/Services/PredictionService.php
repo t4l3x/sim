@@ -18,7 +18,7 @@ class PredictionService
 
     public function getPredictions($week): array
     {
-        $standings = $this->standingsService->getStandingsWithPointsAndAttributes();
+        $standings = $this->standingsService->getStandingsWithPointsAndAttributes(1);
         $predictions = $this->generatePredictions($week, $standings);
 
         return [

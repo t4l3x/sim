@@ -5,13 +5,42 @@ namespace App\Domain\Services;
 
 use App\Domain\Repositories\ILeagueTeamsRepository;
 use App\Domain\Repositories\IMatchRepository;
+use App\Domain\Repositories\IStatisticsRepository;
 
 class LeagueGeneratorService
 {
     private array $teams = [];
     private array $schedule = [];
 
-    public function __construct(protected ILeagueTeamsRepository $leagueTeamsRepository,protected IMatchRepository $matchRepository) {}
+    public function __construct(
+        protected ILeagueTeamsRepository $leagueTeamsRepository,
+        protected IMatchRepository       $matchRepository,
+        protected IStatisticsRepository  $statisticsRepository
+    )
+    {
+    }
+
+    public function resetMatches(int $leagueId): void
+    {
+        // Delete all existing matches for the league
+        $this->matchRepository->deleteMatchesByLeague($leagueId);
+
+        // Reset statistics for all teams in the league
+        $this->removeStatistics($leagueId);
+
+        // Regenerate the matches
+        $this->generateMatches($leagueId);
+    }
+
+    private function removeStatistics(int $leagueId): void
+    {
+        $teams = $this->leagueTeamsRepository->getTeamsByLeagueId($leagueId);
+
+        foreach ($teams as $team) {
+            // Remove the statistics for the team using the league_teams_id
+            $this->statisticsRepository->removeByLeagueTeamsId($team['id']);
+        }
+    }
 
     public function generateMatches(int $leagueId): void
     {
