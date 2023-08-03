@@ -7,6 +7,7 @@ interface IStatisticsRepository extends IRepository
 {
     public function updateStatistics(int $leagueTeamsId, array $stats): void;
 
-    public function findByLeagueTeamsId($id);
+    public function findByLeagueTeamsId(int $id);
 
+    public function removeByLeagueTeamsId(int $leagueTeamsId);
 }

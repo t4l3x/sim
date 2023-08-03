@@ -9,6 +9,7 @@ interface IMatchRepository extends IRepository
     public function findByWeek(int $leagueId, int $weekNumber): array;
     public function getTotalWeeks(int $leagueId): int;
     public function matchesExistForLeague(int $leagueId): bool;
+    public function deleteMatchesByLeague(int $leagueId);
 
 
 }

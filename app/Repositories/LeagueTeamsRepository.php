@@ -46,4 +46,11 @@ class LeagueTeamsRepository implements ILeagueTeamsRepository
 
         return $teams->toArray();
     }
+
+    public function findLeagueTeamsId(int $teamId, int $leagueId)
+    {
+        return $this->leagueTeams->where('leagues_id', $leagueId)
+            ->where('teams_id', $teamId)
+            ->first();
+    }
 }

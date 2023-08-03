@@ -71,4 +71,9 @@ class MatchRepository implements IMatchRepository
         $match = $this->matches->findOrFail($id);
         return $match->delete();
     }
+
+    public function deleteMatchesByLeague(int $leagueId)
+    {
+        $this->matches->where('leagues_id', $leagueId)->delete();
+    }
 }
