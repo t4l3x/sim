@@ -37,10 +37,16 @@
         <!-- League standings table -->
     </table>
 
+    <div>
+        <h2>Current Week: <span class="current-week">1</span></h2>
+    </div>
     <div id="week-results">
         <!-- Week results table -->
     </div>
 
+    <div>
+        <h2>Current Week: <span class="current-week">1</span></h2>
+    </div>
     <div id="week-predictions">
         <!-- Week predictions table -->
     </div>
@@ -172,6 +178,7 @@
 
                 // Update the current week attribute for the buttons
                 $('#week-results').data('week', week);
+                $('.current-week').text(week);
             },
             error: function (xhr, status, error) {
                 console.log(error);
@@ -195,6 +202,7 @@
                 });
                 weekPredictionsTable += '</table>';
                 $('#week-predictions').html(weekPredictionsTable);
+                $('.current-week').text(week);
             },
             error: function (xhr, status, error) {
                 console.log(error);
