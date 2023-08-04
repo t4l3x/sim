@@ -16,7 +16,7 @@ class StatisticsUpdater
         $multiplier = $increment ? 1 : -1;
 
         $stats = [
-            'played' => $multiplier * 1,
+            'played' => $multiplier ,
             'won' => $multiplier * ($goalsFor > $goalsAgainst ? 1 : 0),
             'draw' => $multiplier * ($goalsFor === $goalsAgainst ? 1 : 0),
             'lost' => $multiplier * ($goalsFor < $goalsAgainst ? 1 : 0),
@@ -24,6 +24,8 @@ class StatisticsUpdater
             'goals_against' => $multiplier * $goalsAgainst,
             'goal_difference' => $multiplier * ($goalsFor - $goalsAgainst)
         ];
+
+        $stats['points'] =  $stats['won'] * 3 + $stats['draw'];
 
         $this->statisticsRepository->updateStatistics($leagueTeamsId, $stats);
     }

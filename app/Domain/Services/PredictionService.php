@@ -34,18 +34,27 @@ class PredictionService
         $totalWeeks = (count($standings) - 1) * 2;
         $remainingWeeks = $totalWeeks - $week;
 
+        // Calculate the sum of actual points earned by all teams
+        $totalPoints = array_reduce($standings, function ($acc, $team) {
+            return $acc + $team['points'];
+        }, 0);
+
         foreach ($standings as $team) {
             $teamName = $team['name'];
+
+            // Calculate the team's performance based on actual statistics
+            $teamPerformance = $this->calculateTeamPerformance($team);
+
+            // Calculate the team's prediction based on regression score and performance
             $teamRegressionScore = $this->calculateRegressionScore($team);
-
-            // Consider the remaining matches, current position in the league standings and regression score
             $maxPossiblePoints = $team['points'] + ($remainingWeeks * 3 * $teamRegressionScore);
-
-            // Weight is defined by team strength and max possible points
             $weight = ($teamRegressionScore / 100) * ($maxPossiblePoints / ($totalWeeks * 3));
 
-            // Weighting adjustment to represent the chances for being champion
-            $teamPrediction = round($weight * 100);
+            // Adjust the weight based on the actual points earned by the team
+            $actualPointsWeight = $team['points'] / $totalPoints;
+            $finalWeight = $weight * 0.8 + $actualPointsWeight * 0.2;
+
+            $teamPrediction = round(($finalWeight * 0.5 + $teamPerformance * 0.5) * 100);
 
             $predictions[$week][] = [
                 'team_name' => $teamName,
@@ -59,7 +68,6 @@ class PredictionService
                 return $b['team_prediction'] - $a['team_prediction'];
             });
 
-
             // Normalize the predictions so that they sum up to 100
             $totalPredictions = array_sum(array_column($predictions[$week], 'team_prediction'));
 
@@ -67,9 +75,9 @@ class PredictionService
                 $predictions[$week][$index]['team_prediction'] = round(($prediction['team_prediction'] / $totalPredictions) * 100);
             }
         }
+
         return $predictions;
     }
-
     private function calculateRegressionScore(array $team): float|int
     {
         $historicalPerformance = $team['historical_performance'];
@@ -86,6 +94,28 @@ class PredictionService
         return $coefficients['historical_performance'] * $historicalPerformance
             + $coefficients['player_health'] * $playerHealth
             + $coefficients['strength'] * $teamStrength;
+    }
+
+    private function calculateTeamPerformance(array $team): float
+    {
+        // You should implement the logic here to calculate the team's performance based on actual statistics
+        // Example: You can calculate performance based on win percentage, goals scored, goals conceded, etc.
+        // Adjust this calculation according to the importance of each statistic in your prediction.
+
+        $winPercentage = ($team['won'] + $team['draw']) / $team['played'];
+        $goalsScored = $team['goals_for'];
+        $goalsConceded = $team['goals_against'];
+
+        // Adjust the coefficients based on the importance of each statistic
+        $coefficients = [
+            'win_percentage' => 0.5,
+            'goals_scored' => 0.3,
+            'goals_conceded' => 0.2,
+        ];
+
+        return $coefficients['win_percentage'] * $winPercentage
+            + $coefficients['goals_scored'] * $goalsScored
+            - $coefficients['goals_conceded'] * $goalsConceded;
     }
 
 }

@@ -6,6 +6,8 @@ namespace App\Domain\Services;
 use App\Domain\Repositories\ILeagueTeamsRepository;
 use App\Domain\Repositories\IMatchRepository;
 use App\Domain\Repositories\IStatisticsRepository;
+use App\Repositories\UnitOfWork;
+use Exception;
 
 class LeagueGeneratorService
 {
@@ -15,21 +17,38 @@ class LeagueGeneratorService
     public function __construct(
         protected ILeagueTeamsRepository $leagueTeamsRepository,
         protected IMatchRepository       $matchRepository,
-        protected IStatisticsRepository  $statisticsRepository
+        protected IStatisticsRepository  $statisticsRepository,
+        protected UnitOfWork             $unitOfWork
     )
     {
     }
 
+    /**
+     * @throws Exception
+     */
     public function resetMatches(int $leagueId): void
     {
-        // Delete all existing matches for the league
-        $this->matchRepository->deleteMatchesByLeague($leagueId);
+        // Start a transaction
+        $this->unitOfWork->beginTransaction();
 
-        // Reset statistics for all teams in the league
-        $this->removeStatistics($leagueId);
+        try {
+            // Delete all existing matches for the league
+            $this->matchRepository->deleteMatchesByLeague($leagueId);
 
-        // Regenerate the matches
-        $this->generateMatches($leagueId);
+            // Reset statistics for all teams in the league
+            $this->removeStatistics($leagueId);
+
+            // Regenerate the matches
+            $this->generateMatches($leagueId);
+            // If everything is okay, commit the changes.
+            $this->unitOfWork->commit();
+        } catch (Exception $e) {
+            // An error occurred; rollback the transaction
+            $this->unitOfWork->rollback();
+
+            // Rethrow the exception
+            throw $e;
+        }
     }
 
     private function removeStatistics(int $leagueId): void
@@ -42,14 +61,23 @@ class LeagueGeneratorService
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function generateMatches(int $leagueId): void
     {
+
         // Check if matches have already been generated for the league
         if ($this->matchRepository->matchesExistForLeague($leagueId)) {
             return;
 //            throw new \RuntimeException('Matches already generated for this league');
         }
         $this->teams = $this->leagueTeamsRepository->getTeamsByLeagueId($leagueId);
+
+        if(count($this->teams) < 2) {
+            throw new Exception('You need at least 2 teams to generate the schedule.');
+        }
+
         $this->schedule = [];
 
         $this->ensureEvenNumberOfTeams();

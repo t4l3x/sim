@@ -37,22 +37,15 @@ class StandingsService
             $statistics = $this->statisticsRepository->findByLeagueTeamsId($team['id']);
 
             if (!empty($statistics)) {
-                $points = $statistics['won'] * 3 + $statistics['draw'];
-                $goalDifference = $statistics['goal_difference'];
-                $played = $statistics['played'];
-                $won = $statistics['won'];
-                $draw = $statistics['draw'];
-                $lost = $statistics['lost'];
-
                 $standings[] = [
                     'team_id' => $team['team']['id'],
                     'team_name' => $team['team']['name'],
-                    'played' => $played,
-                    'won' => $won,
-                    'lost' => $lost,
-                    'draw' => $draw,
-                    'points' => $points,
-                    'goal_difference' => $goalDifference,
+                    'played' => $statistics['played'],
+                    'won' => $statistics['won'],
+                    'lost' => $statistics['lost'],
+                    'draw' => $statistics['draw'],
+                    'points' => $statistics['points'],
+                    'goal_difference' => $statistics['goal_difference'],
                 ];
             } else {
                 // Handle the case where statistics are not found for the team
@@ -69,7 +62,6 @@ class StandingsService
 
         return $standings;
     }
-
     public function getStandingsWithPointsAndAttributes($leagueId): array
     {
         $this->loadTeams($leagueId); // Replace 1 with your league_id
@@ -80,20 +72,21 @@ class StandingsService
 
             if (!empty($statistics)) {
                 // Calculate total points
-                $points =
-                    $statistics['won'] * 3 // assuming win is 3 points
-                    + $statistics['draw'] // assuming draw is 1 point
-                    - $statistics['lost'] // assuming lost is 0 point
-                    + $statistics['goals_for'] // assuming goals_for is x points
-                    - $statistics['goals_against'] // assuming goals_against is y points
-                    + $statistics['goal_difference']; // assuming goal_difference is z points
+
 
                 // Fetch attributes
                 $attributes = $this->getAttributesForTeam($team['team']['id']);
 
                 $standings[] = [
                     'name' => $team['team']['name'],
-                    'points' => $points,
+                    'played' => $statistics['played'],
+                    'goals_for' => $statistics['goals_for'],
+                    'goals_against' => $statistics['goals_against'],
+                    'won' => $statistics['won'],
+                    'lost' => $statistics['lost'],
+                    'draw' => $statistics['draw'],
+                    'points' => $statistics['points'],
+                    'goal_difference' => $statistics['goal_difference'],
                     'historical_performance' => $attributes['historical_performance'] ?? 0,
                     'player_health' => $attributes['player_health'] ?? 0,
                     'strength' => $attributes['strength'] ?? 0,
