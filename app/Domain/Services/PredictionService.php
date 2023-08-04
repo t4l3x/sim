@@ -2,18 +2,13 @@
 declare(strict_types=1);
 
 namespace App\Domain\Services;
-
-use App\Domain\Repositories\IAttributesRepository;
-
 class PredictionService
 {
 
     public function __construct(
-        protected StandingsService      $standingsService,
-        protected IAttributesRepository $attributeRepository
+        private readonly StandingsService      $standingsService,
     )
     {
-
     }
 
     public function getPredictions($week): array

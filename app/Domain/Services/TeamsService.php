@@ -9,7 +9,7 @@ class TeamsService
 {
 
     public function __construct(
-        protected IAttributesRepository $attributesRepository
+        private readonly IAttributesRepository $attributesRepository
     )
     {
     }

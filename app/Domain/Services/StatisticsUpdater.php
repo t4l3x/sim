@@ -7,7 +7,7 @@ use App\Domain\Repositories\IStatisticsRepository;
 
 class StatisticsUpdater
 {
-    public function __construct(protected IStatisticsRepository $statisticsRepository)
+    public function __construct(private readonly IStatisticsRepository $statisticsRepository)
     {
     }
 

@@ -51,16 +51,6 @@ class LeagueGeneratorService
         }
     }
 
-    private function removeStatistics(int $leagueId): void
-    {
-        $teams = $this->leagueTeamsRepository->getTeamsByLeagueId($leagueId);
-
-        foreach ($teams as $team) {
-            // Remove the statistics for the team using the league_teams_id
-            $this->statisticsRepository->removeByLeagueTeamsId($team['id']);
-        }
-    }
-
     /**
      * @throws Exception
      */
@@ -74,7 +64,7 @@ class LeagueGeneratorService
         }
         $this->teams = $this->leagueTeamsRepository->getTeamsByLeagueId($leagueId);
 
-        if(count($this->teams) < 2) {
+        if (count($this->teams) < 2) {
             throw new Exception('You need at least 2 teams to generate the schedule.');
         }
 
@@ -100,6 +90,16 @@ class LeagueGeneratorService
     {
         if (count($this->teams) % 2 !== 0) {
             $this->teams[] = null;
+        }
+    }
+
+    private function removeStatistics(int $leagueId): void
+    {
+        $teams = $this->leagueTeamsRepository->getTeamsByLeagueId($leagueId);
+
+        foreach ($teams as $team) {
+            // Remove the statistics for the team using the league_teams_id
+            $this->statisticsRepository->removeByLeagueTeamsId($team['id']);
         }
     }
 

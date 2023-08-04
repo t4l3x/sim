@@ -6,12 +6,11 @@ namespace App\Http\Controllers;
 use App\Domain\Services\MatchService;
 use App\Domain\Services\StandingsService;
 use App\Http\Helpers\ApiHelpers;
-use App\Models\Matches;
 use App\Domain\Services\LeagueGeneratorService;
+use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
+
 
 
 class SimulationController extends Controller
@@ -29,6 +28,9 @@ class SimulationController extends Controller
         return view('standings');
     }
 
+    /**
+     * @throws Exception
+     */
     public function resetLeague(): JsonResponse
     {
         $this->leagueService->resetMatches(1); // Replace 1 with the appropriate league ID

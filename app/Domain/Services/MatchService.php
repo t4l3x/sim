@@ -11,12 +11,12 @@ use App\Domain\Repositories\IUnitOfWork;
 class MatchService
 {
     public function __construct(
-        protected IUnitOfWork            $unitOfWork,
-        protected IMatchRepository       $matchRepository,
-        protected ILeagueTeamsRepository $leagueTeamsRepository,
-        protected GoalSimulator          $goalSimulator,
-        protected TeamsService           $teamsService,
-        protected StatisticsUpdater      $statisticsUpdater
+        private readonly IUnitOfWork            $unitOfWork,
+        private readonly IMatchRepository       $matchRepository,
+        private readonly ILeagueTeamsRepository $leagueTeamsRepository,
+        private readonly GoalSimulator          $goalSimulator,
+        private readonly TeamsService           $teamsService,
+        private readonly StatisticsUpdater      $statisticsUpdater
     )
     {
     }

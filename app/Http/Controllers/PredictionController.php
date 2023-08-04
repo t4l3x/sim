@@ -22,11 +22,6 @@ class PredictionController extends Controller
 
         $predictions = $this->predictionService->getPredictions($week);
 
-        // Prepare the data to be returned as JSON
-        $data = [
-            'predictions' => $predictions
-        ];
-
         return ApiHelpers::successResponse('OK', ['predictions' => $predictions]);
 
     }

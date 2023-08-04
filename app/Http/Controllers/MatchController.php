@@ -23,8 +23,6 @@ class MatchController extends Controller
 
         $matches = $this->matchService->getMatchesForWeek($week);
 
-        // Prepare the data to be returned as JSON
-
         return ApiHelpers::successResponse('OK', ['matches' => $matches]);
 
     }

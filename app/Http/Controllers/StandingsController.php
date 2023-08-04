@@ -3,14 +3,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Domain\Services\MatchService;
 use App\Domain\Services\StandingsService;
-use App\Domain\Services\PredictionService;
 use App\Http\Helpers\ApiHelpers;
 use App\Http\Requests\WeekRequest;
-
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 
 class StandingsController extends Controller
