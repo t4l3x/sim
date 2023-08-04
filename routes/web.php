@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MatchController;
+use App\Http\Controllers\PredictionController;
 use App\Http\Controllers\SimulationController;
 use App\Http\Controllers\StandingsController;
 use Illuminate\Support\Facades\Route;
@@ -22,8 +24,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index']);
 
 Route::get('/standings/{week}', [StandingsController::class, 'show']);
-Route::post('/play-week/{week}', [StandingsController::class, 'playWeek']);
-Route::post('/play-all-matches', [StandingsController::class, 'playAllWeek']);
+Route::get('/week-predictions/{week}', [PredictionController::class, 'show']);
+Route::get('/week-results/{week}', [MatchController::class, 'show']);
+Route::post('/play-week/{week}', [MatchController::class, 'playWeek']);
+Route::post('/play-all-matches', [MatchController::class, 'playAllWeek']);
 Route::post('/reset-league', [SimulationController::class, 'resetLeague']);
 
 
