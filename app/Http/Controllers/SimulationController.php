@@ -7,6 +7,7 @@ use App\Domain\Services\MatchService;
 use App\Domain\Services\StandingsService;
 use App\Http\Helpers\ApiHelpers;
 use App\Domain\Services\LeagueGeneratorService;
+use App\Http\Requests\MatchRequest;
 use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -38,6 +39,10 @@ class SimulationController extends Controller
 
         return ApiHelpers::successResponse('League reset successfully');
 
+    }
+
+    public function League(MatchRequest $league): JsonResponse
+    {
 
     }
 
