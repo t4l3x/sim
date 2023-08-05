@@ -17,11 +17,12 @@ class MatchRepository implements IMatchRepository
         return $this->matches->where('leagues_id', $leagueId)->exists();
     }
 
-    public function getMatchesForWeek($week): \Illuminate\Database\Eloquent\Collection|array
+    public function findByWeekAndLeague($weekNumber, $league_id): array
     {
         return $this->matches->with(['homeTeam' => fn ($query) => $query->select('id', 'name'),
             'awayTeam' => fn ($query) => $query->select('id', 'name')])
-            ->where('week', $week)
+            ->where('week', $weekNumber)
+            ->where('leagues_id', $league_id)
             ->get(['id','home_team_id', 'away_team_id', 'home_team_goals', 'away_team_goals','week'])->toArray();
     }
 
@@ -43,6 +44,13 @@ class MatchRepository implements IMatchRepository
             ->toArray();
     }
 
+    public function findByLeague(int $leagueId): array
+    {
+        return $this->matches->with(['homeTeam' => fn ($query) => $query->select('id', 'name'),
+            'awayTeam' => fn ($query) => $query->select('id', 'name')])
+            ->where('leagues_id', $leagueId)
+            ->get(['id','home_team_id', 'away_team_id', 'home_team_goals', 'away_team_goals','week'])->toArray();
+    }
     public function getTotalWeeks(int $leagueId): int
     {
         return $this->matches->where('leagues_id', $leagueId)
@@ -72,7 +80,7 @@ class MatchRepository implements IMatchRepository
         return $match->delete();
     }
 
-    public function deleteMatchesByLeague(int $leagueId)
+    public function deleteMatchesByLeague(int $leagueId): void
     {
         $this->matches->where('leagues_id', $leagueId)->delete();
     }
