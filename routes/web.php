@@ -26,6 +26,7 @@ Route::get('/', [HomeController::class, 'index']);
 Route::get('/standings/{week}', [StandingsController::class, 'show']);
 Route::get('/week-predictions/{week}', [PredictionController::class, 'show']);
 Route::get('/week-results/{week}', [MatchController::class, 'show']);
+Route::get('/all-matches', [MatchController::class, 'allMatches']);
 Route::post('/play-week/{week}', [MatchController::class, 'playWeek']);
 Route::post('/play-all-matches', [MatchController::class, 'playAllWeek']);
 Route::post('/reset-league', [SimulationController::class, 'resetLeague']);
