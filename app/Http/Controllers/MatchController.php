@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 
 use App\Domain\Services\MatchService;
 use App\Http\Helpers\ApiHelpers;
-use App\Http\Requests\WeekRequest;
+use App\Http\Requests\MatchRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+
 
 class MatchController extends Controller
 {
@@ -17,18 +17,28 @@ class MatchController extends Controller
     {
     }
 
-    public function show(WeekRequest $request): JsonResponse
+    public function show(MatchRequest $request): JsonResponse
     {
         $week = $request->validated()['week'];
+//        $league = $request->validated()['league'];
 
-        $matches = $this->matchService->getMatchesForWeek($week);
+        $matches = $this->matchService->getMatchesForWeek($week,1);
 
         return ApiHelpers::successResponse('OK', ['matches' => $matches]);
 
     }
 
-    public function playWeek(Request $request, int $week): JsonResponse
+    public function allMatches(MatchRequest $request): JsonResponse
     {
+        $league = $request->validated()['league'];
+
+        $matches = $this->matchService->getAllMatches(1);
+
+        return ApiHelpers::successResponse('OK', ['matches' => $matches]);
+    }
+    public function playWeek(MatchRequest $request): JsonResponse
+    {
+        $week = $request->validated()['week'];
         try {
             $this->matchService->playWeek(1, $week);
             return ApiHelpers::successResponse('Week ' . $week . ' played successfully');
@@ -37,7 +47,7 @@ class MatchController extends Controller
         }
     }
 
-    public function playAllWeek(Request $request): JsonResponse
+    public function playAllWeek(MatchRequest $request): JsonResponse
     {
         try {
             $this->matchService->playAll(1);
