@@ -74,12 +74,15 @@ class MatchService
         }
     }
 
-    public function getMatchesForWeek(int $week): array
+    public function getMatchesForWeek(int $week, $league_id): array
     {
-        return $this->matchRepository->getMatchesForWeek($week);
+        return $this->matchRepository->findByWeekAndLeague($week, $league_id);
     }
 
-
+    public function getAllMatches(int $leagueId): array
+    {
+        return $this->matchRepository->findByLeague($leagueId);
+    }
     private function resetMatchStatistics(array $match): void
     {
 
