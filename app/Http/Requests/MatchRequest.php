@@ -5,12 +5,13 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class WeekRequest extends FormRequest
+class MatchRequest extends FormRequest
 {
     public function rules(): array
     {
         return [
-            'week' => 'required|integer',
+            'week' => 'nullable|sometimes|integer',
+            'league_id' => 'nullable|sometimes|integer',
         ];
     }
 
@@ -18,6 +19,7 @@ class WeekRequest extends FormRequest
     {
         $data = parent::all($keys);
         $data['week'] = $this->route('week');
+        $data['league_id'] = $this->route('league');
 
         return $data;
     }
