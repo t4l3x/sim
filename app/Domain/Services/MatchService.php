@@ -74,9 +74,31 @@ class MatchService
         }
     }
 
+    public function manuallyUpdateResult(int $matchId, int $homeGoals, int $awayGoals): void
+    {
+        $match = $this->matchRepository->findById($matchId);
+
+        if ($match['played']) {
+            $this->resetMatchStatistics($match);
+        }
+
+        $this->matchRepository->updateMatchResult($matchId, [
+            'homeGoals' => $homeGoals,
+            'awayGoals' => $awayGoals,
+            'played' => 1,
+        ]);
+
+        $updatedMatch = $this->matchRepository->findById($matchId);
+
+        $this->statisticsUpdater->update($updatedMatch['home_team_id'], $updatedMatch['home_team_goals'], $updatedMatch['away_team_goals']);
+
+        // Update or create statistics for away team
+        $this->statisticsUpdater->update($updatedMatch['away_team_id'], $updatedMatch['away_team_goals'], $updatedMatch['home_team_goals']);
+    }
+
     public function totalWeeks(int $leagueId): int
     {
-        return  $this->matchRepository->getTotalWeeks($leagueId);
+        return $this->matchRepository->getTotalWeeks($leagueId);
     }
 
     public function getMatchesForWeek(int $week, $league_id): array
@@ -88,6 +110,7 @@ class MatchService
     {
         return $this->matchRepository->findByLeague($leagueId);
     }
+
     private function resetMatchStatistics(array $match): void
     {
 
@@ -133,22 +156,6 @@ class MatchService
         $this->statisticsUpdater->update($updatedMatch['away_team_id'], $updatedMatch['away_team_goals'], $updatedMatch['home_team_goals']);
 
 
-    }
-
-    public function updateResult(int $matchId, int $homeGoals, int $awayGoals): void
-    {
-        $this->matchRepository->updateMatchResult($matchId, [
-            'homeGoals' => $homeGoals,
-            'awayGoals' => $awayGoals,
-            'played' => 1,
-        ]);
-
-        $updatedMatch = $this->matchRepository->findById($matchId);
-
-        $this->statisticsUpdater->update($updatedMatch['home_team_id'], $updatedMatch['home_team_goals'], $updatedMatch['away_team_goals']);
-
-        // Update or create statistics for away team
-        $this->statisticsUpdater->update($updatedMatch['away_team_id'], $updatedMatch['away_team_goals'], $updatedMatch['home_team_goals']);
     }
 
 }

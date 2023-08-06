@@ -68,7 +68,7 @@ class MatchController extends Controller
         try {
             $homeGoals = $request->validated()['home_goals'];
             $awayGoals =  $request->validated()['away_goals'];
-            $this->matchService->updateResult($matchId->id, $homeGoals, $awayGoals);
+            $this->matchService->manuallyUpdateResult($matchId->id, $homeGoals, $awayGoals);
             return ApiHelpers::successResponse('All matches played successfully');
         } catch (\Exception $e) {
             return ApiHelpers::errorResponse($e->getMessage(), 500);
