@@ -74,6 +74,11 @@ class MatchService
         }
     }
 
+    public function totalWeeks(int $leagueId): int
+    {
+        return  $this->matchRepository->getTotalWeeks($leagueId);
+    }
+
     public function getMatchesForWeek(int $week, $league_id): array
     {
         return $this->matchRepository->findByWeekAndLeague($week, $league_id);
@@ -122,6 +127,24 @@ class MatchService
         $updatedMatch = $this->matchRepository->findById($match['id']);
 
         // Update or create statistics for home team
+        $this->statisticsUpdater->update($updatedMatch['home_team_id'], $updatedMatch['home_team_goals'], $updatedMatch['away_team_goals']);
+
+        // Update or create statistics for away team
+        $this->statisticsUpdater->update($updatedMatch['away_team_id'], $updatedMatch['away_team_goals'], $updatedMatch['home_team_goals']);
+
+
+    }
+
+    public function updateResult(int $matchId, int $homeGoals, int $awayGoals): void
+    {
+        $this->matchRepository->updateMatchResult($matchId, [
+            'homeGoals' => $homeGoals,
+            'awayGoals' => $awayGoals,
+            'played' => 1,
+        ]);
+
+        $updatedMatch = $this->matchRepository->findById($matchId);
+
         $this->statisticsUpdater->update($updatedMatch['home_team_id'], $updatedMatch['home_team_goals'], $updatedMatch['away_team_goals']);
 
         // Update or create statistics for away team
