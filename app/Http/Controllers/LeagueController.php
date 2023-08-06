@@ -7,19 +7,19 @@ use App\Domain\Services\MatchService;
 use App\Domain\Services\StandingsService;
 use App\Http\Helpers\ApiHelpers;
 use App\Domain\Services\LeagueGeneratorService;
-use App\Http\Requests\MatchRequest;
+use App\Http\Requests\MatchUpdateRequest;
+use App\Models\Leagues;
 use Exception;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 
 
 
-class SimulationController extends Controller
+class LeagueController extends Controller
 {
     public function __construct(
         protected LeagueGeneratorService $leagueService,
-        protected StandingsService       $standingsService,
-        protected MatchService           $matchService
+
     )
     {
     }
@@ -32,18 +32,18 @@ class SimulationController extends Controller
     /**
      * @throws Exception
      */
-    public function resetLeague(): JsonResponse
+    public function resetLeague(Leagues $league): JsonResponse
     {
-        $this->leagueService->resetMatches(1); // Replace 1 with the appropriate league ID
-        // You may also want to reset any other related data for the league
+        $this->leagueService->resetMatches($league->id);
 
         return ApiHelpers::successResponse('League reset successfully');
 
     }
 
-    public function League(MatchRequest $league): JsonResponse
+    public function leagueInfo(Leagues $league): JsonResponse
     {
 
+        return ApiHelpers::successResponse('');
     }
 
 }
