@@ -1,9 +1,12 @@
 import './bootstrap';
 import 'jquery/src/jquery';
 
-$(document).ready(function () {
-    var currentWeek = 1;
-    loadStandings(1);
+const league = 1;
+const totalWeeks = await getTotalWeeks(league);
+$(document).ready(async function () {
+    let currentWeek = 1;
+
+    loadStandings(league);
     // Call the generateResultOfWeek function to create the initial week container for week 1
     generateResultOfWeek(currentWeek);
 
@@ -12,34 +15,31 @@ $(document).ready(function () {
         resetMatches();
     });
 
-    // Event handlers for previous and next week buttons
-    $('#prev-week').click(function () {
-        var currentWeek = parseInt($('#week-results').data('week'));
-        loadWeekResults(currentWeek - 1);
-        loadWeekPredictions(currentWeek - 1);
-    });
-
     // Event handler for "Next Week" button
     $('#next-week').click(function () {
         currentWeek++;
+        if (currentWeek > totalWeeks) {
+            alert('All weeks have been Loaded.');
+            return;
+        }
+
         generateResultOfWeek(currentWeek); // Generate new week container for the next week
         $('.current-week').text(currentWeek);
     });
 
     // Event handler for playing a week
-    // Event handler for playing a week
     $(document).on('click', '.play-week', function () {
-        var week = $(this).data('week');
-        playWeek(week);
+        const week = $(this).data('week');
+        playWeek(league, week);
     });
 
     // Event handler for playing all matches
     $('#play-all').click(function () {
-        playAllMatches();
+        currentWeek = totalWeeks;
+        playAllMatches(league);
     });
-
-
 });
+
 
 function generateResultOfWeek(week) {
     // Generate the HTML for the week container with a specific ID
@@ -57,8 +57,8 @@ function generateResultOfWeek(week) {
     $('.week-containers').append(weekContainerHTML);
 
     // Load the week results and predictions inside this method
-    loadWeekResults(week);
-    loadWeekPredictions(week);
+    loadWeekResults(league,week);
+    loadWeekPredictions(league,week);
 }
 function resetMatches() {
     // Send AJAX request to resetLeague method
@@ -66,7 +66,7 @@ function resetMatches() {
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
-        url: '/reset-league', // Replace with the appropriate route for resetLeague method
+        url: '/reset-league/' + league, // Replace with the appropriate route for resetLeague method
         type: 'POST',
         dataType: 'json',
         success: function (response) {
@@ -81,14 +81,14 @@ function resetMatches() {
     });
 }
 
-function loadStandings(week) {
+function loadStandings(league) {
     $.ajax({
-        url: '/standings/' + week, // Replace with the appropriate route for fetching standings
+        url: '/standings/' + league ,
         type: 'GET',
         dataType: 'json',
         success: function (response) {
             // Update league standings table
-            var standingsTable = '<tr><th>Team</th><th>Played</th><th>Won</th><th>Lost</th><th>Draw</th><th>Points</th><th>Goal Difference</th></tr>';
+            let standingsTable = '<tr><th>Team</th><th>Played</th><th>Won</th><th>Lost</th><th>Draw</th><th>Points</th><th>Goal Difference</th></tr>';
             $.each(response.data.standings, function (index, team) {
                 standingsTable += '<tr>' +
                     '<td>' + team.team_name + '</td>' +
@@ -104,13 +104,14 @@ function loadStandings(week) {
         },
         error: function (xhr, status, error) {
             console.log(error);
+            // Handle error here, show an error message or update UI accordingly
         }
     });
 }
 
-function loadWeekResults(week) {
+function loadWeekResults(league,week) {
     $.ajax({
-        url: '/week-results/' + week, // Replace with the appropriate route for fetching week results
+        url: '/week-results/' + league + '/' + week, // Replace with the appropriate route for fetching week results
         type: 'GET',
         dataType: 'json',
         success: function (response) {
@@ -138,9 +139,9 @@ function loadWeekResults(week) {
     });
 }
 
-function loadWeekPredictions(week) {
+function loadWeekPredictions(league,week) {
     $.ajax({
-        url: '/week-predictions/' + week, // Replace with the appropriate route for fetching week predictions
+        url:  '/week-predictions/' + league + '/' + week,// Replace with the appropriate route for fetching week predictions
         type: 'GET',
         dataType: 'json',
         success: function (response) {
@@ -162,18 +163,18 @@ function loadWeekPredictions(week) {
     });
 }
 
-function playWeek(week) {
+function playWeek(league,week) {
     $.ajax({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
-        url: '/play-week/' + week, // Replace with the appropriate route
+        url: '/play-week/' + league + '/' + week, // Replace with the appropriate route
         type: 'POST',
         dataType: 'json',
         success: function (response) {
-            loadStandings(week);
-            loadWeekResults(week);
-            loadWeekPredictions(week);
+            loadStandings(league);
+            loadWeekResults(league,week);
+            loadWeekPredictions(league,week);
             console.log('Week ' + week + ' played successfully.');
         },
         error: function (xhr, status, error) {
@@ -182,20 +183,29 @@ function playWeek(week) {
     });
 }
 
-function playAllMatches() {
+function playAllMatches(league) {
     $.ajax({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         },
-        url: '/play-all-matches', // Replace with the appropriate route
+        url: '/play-all-matches/' + league,
         type: 'POST',
         dataType: 'json',
         success: function (response) {
-            var currentWeek = parseInt($('#week-results').data('week'));
+            // Get the total weeks and store it in a variable
 
-            loadStandings(currentWeek);
-            loadWeekResults(currentWeek);
-            loadWeekPredictions(currentWeek);
+            // Clear existing containers before generating new ones
+            $('.week-containers').empty();
+            // Load and display results and predictions for each week
+            for (let week = 1; week <= totalWeeks; week++) {
+                generateResultOfWeek(week); // Generate new week container for the next week
+                $('.current-week').text(week);
+            }
+
+            // Update standings after all weeks are played
+            loadStandings(league);
+
+            // Display a success message
             console.log('All matches played successfully.');
         },
         error: function (xhr, status, error) {
@@ -204,9 +214,27 @@ function playAllMatches() {
     });
 }
 
+function getTotalWeeks(league) {
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            url: '/total-weeks/' + league,
+            type: 'GET',
+            dataType: 'json',
+            success: function (response) {
+                // Resolve the promise with the total weeks value
+                resolve(response.data.total);
+            },
+            error: function (xhr, status, error) {
+                // Reject the promise with an error (optional)
+                console.log(error);
+                reject(error);
+            }
+        });
+    });
+}
 // Event handler for editing a match result
 $(document).on('click', '.edit-result', function () {
-    var $row = $(this).closest('tr');
+    const $row = $(this).closest('tr');
     $row.find('.editable').attr('contenteditable', 'true');
     $row.find('.edit-result').hide();
     $row.find('.save-result').show();
@@ -214,26 +242,59 @@ $(document).on('click', '.edit-result', function () {
 
 // Event handler for saving a match result
 $(document).on('click', '.save-result', function () {
-    var $row = $(this).closest('tr');
-    var matchId = $row.data('match-id');
-    var homeGoals = $row.find('.editable').eq(0).text();
-    var awayGoals = $row.find('.editable').eq(1).text();
+    const $row = $(this).closest('tr');
+    const matchId = $row.data('match-id');
+    const homeGoals = $row.find('.editable').eq(0).text();
+    const awayGoals = $row.find('.editable').eq(1).text();
+
+    // Get the CSRF token from the meta tag
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
     $.ajax({
-        url: '/update-result/' + matchId,  // Replace with the appropriate route
+        url: '/update-result/' + matchId,
         type: 'POST',
         dataType: 'json',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        },
         data: {
             home_goals: homeGoals,
             away_goals: awayGoals
         },
         success: function (response) {
-            var currentWeek = parseInt($('#week-results').data('week'));
-            loadWeek(currentWeek);
+            const currentWeek = parseInt($(this).closest('.week-container').data('week'));
+
             console.log('Match result updated successfully.');
+
+            // Update week predictions for the same week
+            updateWeekPredictions(currentWeek);
         },
         error: function (xhr, status, error) {
             console.log(error);
         }
     });
 });
+// Function to update week predictions for a specific week
+function updateWeekPredictions(week) {
+    $.ajax({
+        url: '/week-predictions/' + league + '/' + week,
+        type: 'GET',
+        dataType: 'json',
+        success: function (response) {
+            // Update week predictions table for the specified week
+            var weekPredictionsTable = '<table class="border-separate border-spacing-2 border border-slate-500 ..."><tr><th>Team</th><th>Prediction</th></tr>';
+            $.each(response.data.predictions.predictions[week], function (index, prediction) {
+                weekPredictionsTable += '<tr>' +
+                    '<td>' + prediction.team_name + '</td>' +
+                    '<td>' + prediction.team_prediction + '%</td>' +
+                    '</tr>';
+            });
+            weekPredictionsTable += '</table>';
+            $('#week-predictions-' + week).html(weekPredictionsTable);
+            $('.current-week').text(week);
+        },
+        error: function (xhr, status, error) {
+            console.log(error);
+        }
+    });
+}
