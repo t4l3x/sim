@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 namespace App\Domain\Services;
+use App\Models\Leagues;
+
 class PredictionService
 {
 
@@ -11,9 +13,9 @@ class PredictionService
     {
     }
 
-    public function getPredictions($week): array
+    public function getPredictions($league_id, $week): array
     {
-        $standings = $this->standingsService->getStandingsWithPointsAndAttributes(1);
+        $standings = $this->standingsService->getStandingsWithPointsAndAttributes($league_id);
         $predictions = $this->generatePredictions($week, $standings);
 
         return [
@@ -103,8 +105,8 @@ class PredictionService
 
         // Adjust the coefficients based on the importance of each statistic
         $coefficients = [
-            'win_percentage' => 0.5,
-            'goals_scored' => 0.3,
+            'win_percentage' => 0.40,
+            'goals_scored' => 0.35,
             'goals_conceded' => 0.2,
         ];
 
