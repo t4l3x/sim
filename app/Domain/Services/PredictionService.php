@@ -16,8 +16,10 @@ class PredictionService
     const GOALS_SCORED_COEFFICIENT = 0.35;
     const GOALS_CONCEDED_COEFFICIENT = -0.2;
 
-    const WEIGHT_REGRESSION = 0.8;
-    const WEIGHT_ACTUAL_POINTS = 0.2;
+    const FINAL_WEIGHT_COEFFICIENT = 0.8;
+    const ACTUAL_POINTS_WEIGHT_COEFFICIENT = 0.2;
+    const TEAM_PERFORMANCE_WEIGHT = 0.5;
+    const REGRESSION_SCORE_WEIGHT = 0.5;
 
     public function __construct(
         private readonly StandingsService      $standingsService,
@@ -62,9 +64,9 @@ class PredictionService
 
             // Adjust the weight based on the actual points earned by the team
             $actualPointsWeight = $team['points'] / $totalPoints;
-            $finalWeight = $weight * 0.8 + $actualPointsWeight * 0.2;
+            $finalWeight = $weight * self::FINAL_WEIGHT_COEFFICIENT + $actualPointsWeight * self::ACTUAL_POINTS_WEIGHT_COEFFICIENT;
 
-            $teamPrediction = round(($finalWeight * 0.5 + $teamPerformance * 0.5) * 100);
+            $teamPrediction = round(($finalWeight * self::TEAM_PERFORMANCE_WEIGHT + $teamPerformance * self::REGRESSION_SCORE_WEIGHT) * 100);
 
             $predictions[$week][] = [
                 'team_name' => $teamName,
