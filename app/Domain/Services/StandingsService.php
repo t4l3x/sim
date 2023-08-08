@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Services;
 
+use App\Domain\Helpers\SortStrategyInterface;
 use App\Domain\Repositories\IAttributesRepository;
 use App\Domain\Repositories\ILeagueTeamsRepository;
 use App\Domain\Repositories\IStatisticsRepository;
@@ -15,6 +16,7 @@ class StandingsService
         private readonly ILeagueTeamsRepository $leagueTeamsRepository,
         private readonly IStatisticsRepository  $statisticsRepository,
         private readonly IAttributesRepository  $attributesRepository,
+        private readonly SortStrategyInterface $sortStrategy
     )
     {
 
@@ -53,14 +55,8 @@ class StandingsService
         }
 
         // Sort the standings array based on points and goal difference
-        usort($standings, function ($a, $b) {
-            if ($a['points'] === $b['points']) {
-                return $b['goal_difference'] - $a['goal_difference'];
-            }
-            return $b['points'] - $a['points'];
-        });
+        return $this->sortStrategy->sort($standings);
 
-        return $standings;
     }
     public function getStandingsWithPointsAndAttributes($leagueId): array
     {

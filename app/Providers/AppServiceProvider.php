@@ -2,12 +2,17 @@
 
 namespace App\Providers;
 
+use App\Domain\Helpers\PredictionsSorter;
+use App\Domain\Helpers\SortStrategyInterface;
+use App\Domain\Helpers\StandingsSorter;
 use App\Domain\Repositories\IAttributesRepository;
 use App\Domain\Repositories\ILeagueTeamsRepository;
 use App\Domain\Repositories\IMatchRepository;
 use App\Domain\Repositories\IStatisticsRepository;
 use App\Domain\Repositories\ITeamsRepository;
 use App\Domain\Repositories\IUnitOfWork;
+use App\Domain\Services\PredictionService;
+use App\Domain\Services\StandingsService;
 use App\Repositories\AttributesRepository;
 use App\Repositories\LeagueTeamsRepository;
 use App\Repositories\MatchRepository;
@@ -47,6 +52,14 @@ class AppServiceProvider extends ServiceProvider
             IUnitOfWork::class,
             UnitOfWork::class
         );
+
+        $this->app->when(PredictionService::class)
+            ->needs(SortStrategyInterface::class)
+            ->give(PredictionsSorter::class);
+
+        $this->app->when(StandingsService::class)
+            ->needs(SortStrategyInterface::class)
+            ->give(StandingsSorter::class);
     }
 
     /**

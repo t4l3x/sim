@@ -2,13 +2,26 @@
 declare(strict_types=1);
 
 namespace App\Domain\Services;
+use App\Domain\Helpers\SortStrategyInterface;
 use App\Models\Leagues;
 
 class PredictionService
 {
 
+    const HISTORICAL_PERFORMANCE_COEFFICIENT = 0.5;
+    const PLAYER_HEALTH_COEFFICIENT = 0.3;
+    const STRENGTH_COEFFICIENT = 0.2;
+
+    const WIN_PERCENTAGE_COEFFICIENT = 0.40;
+    const GOALS_SCORED_COEFFICIENT = 0.35;
+    const GOALS_CONCEDED_COEFFICIENT = -0.2;
+
+    const WEIGHT_REGRESSION = 0.8;
+    const WEIGHT_ACTUAL_POINTS = 0.2;
+
     public function __construct(
         private readonly StandingsService      $standingsService,
+        private readonly SortStrategyInterface $sortStrategy
     )
     {
     }
@@ -61,58 +74,32 @@ class PredictionService
 
         // Sort predictions array based on team predictions
         if (count($predictions) > 0) {
-            usort($predictions[$week], function ($a, $b) {
-                return $b['team_prediction'] - $a['team_prediction'];
-            });
-
-            // Normalize the predictions so that they sum up to 100
-            $totalPredictions = array_sum(array_column($predictions[$week], 'team_prediction'));
-
-            foreach ($predictions[$week] as $index => $prediction) {
-                $predictions[$week][$index]['team_prediction'] = round(($prediction['team_prediction'] / $totalPredictions) * 100);
-            }
+            $predictions = $this->sortStrategy->sort($predictions);
         }
 
         return $predictions;
     }
-    private function calculateRegressionScore(array $team): float|int
+
+    private function calculateRegressionScore(array $team): float
     {
         $historicalPerformance = $team['historical_performance'];
         $playerHealth = $team['player_health'];
         $teamStrength = $team['strength'];
 
-        // These coefficients are determined by fitting the model to past data
-        $coefficients = [
-            'historical_performance' => 0.5,
-            'player_health' => 0.3,
-            'strength' => 0.2,
-        ];
-
-        return $coefficients['historical_performance'] * $historicalPerformance
-            + $coefficients['player_health'] * $playerHealth
-            + $coefficients['strength'] * $teamStrength;
+        return (self::HISTORICAL_PERFORMANCE_COEFFICIENT * $historicalPerformance)
+            + (self::PLAYER_HEALTH_COEFFICIENT * $playerHealth)
+            + (self::STRENGTH_COEFFICIENT * $teamStrength);
     }
 
     private function calculateTeamPerformance(array $team): float
     {
-        // You should implement the logic here to calculate the team's performance based on actual statistics
-        // Example: You can calculate performance based on win percentage, goals scored, goals conceded, etc.
-        // Adjust this calculation according to the importance of each statistic in your prediction.
-
         $winPercentage = ($team['won'] + $team['draw']) / $team['played'];
         $goalsScored = $team['goals_for'];
         $goalsConceded = $team['goals_against'];
 
-        // Adjust the coefficients based on the importance of each statistic
-        $coefficients = [
-            'win_percentage' => 0.40,
-            'goals_scored' => 0.35,
-            'goals_conceded' => 0.2,
-        ];
-
-        return $coefficients['win_percentage'] * $winPercentage
-            + $coefficients['goals_scored'] * $goalsScored
-            - $coefficients['goals_conceded'] * $goalsConceded;
+        return (self::WIN_PERCENTAGE_COEFFICIENT * $winPercentage)
+            + (self::GOALS_SCORED_COEFFICIENT * $goalsScored)
+            + (self::GOALS_CONCEDED_COEFFICIENT * $goalsConceded);
     }
 
 }
